@@ -1,11 +1,22 @@
 import "./App.css";
+import { combineReducers, createStore } from "redux";
+import reducer from "./store/reducer";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 const axios = require("axios");
+const store = createStore(
+  combineReducers({ joblist: reducer }),
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+);
 
-axios
-  .post(
-    "https://api.graphql.jobs/",
-    {
-      query: `{
+function App() {
+  const [test, setTest] = useState([]);
+  useEffect(() => {
+    axios
+      .post(
+        "https://api.graphql.jobs/",
+        {
+          query: `{
   jobs{
     title,
     company{
@@ -16,17 +27,27 @@ axios
     updatedAt
   }
 }`,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  )
-  .then((res) => console.log(res.data));
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((res) => {
+        console.log(res.data.data.jobs);
+        setTest(res.data.data.jobs);
+        store.dispatch({ type: "ADD_ALL", value: res.data.data.jobs });
+      });
+  }, []);
 
-function App() {
-  return <div className>Hello</div>;
+  return (
+    <div className>
+      {test.map((x) => (
+        <div>{x.title}</div>
+      ))}
+    </div>
+  );
 }
 
 export default App;
