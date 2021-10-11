@@ -12,7 +12,7 @@ import Collapse from "@mui/material/Collapse";
 import { Container, TextField } from "@mui/material";
 import { CollectionsBookmark, Input } from "@mui/icons-material";
 import FormControl from "@mui/material/FormControl";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -56,12 +56,13 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function SearchAppBar() {
+export default function SearchAppBar(props) {
   const [filtermenu, setFiltermenu] = useState(false);
   const [generalsearch, setGeneralSearch] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const dispatch = useDispatch();
+  const joblist = useSelector((state) => state.joblist);
 
   const generalsearchHandle = (e) => {
     setGeneralSearch(e.target.value);
@@ -76,15 +77,39 @@ export default function SearchAppBar() {
   };
 
   const submitHandle = (e) => {
-    dispatch({
-      type: "SET_FILTER",
-      value: {
-        location: location,
-        description: description,
-        general: generalsearch,
-      },
-    });
+    props.axios
+      .post(props.url, props.query, props.header)
+      .then((res) => {
+        dispatch({
+          type: "ADD_ALL",
+          value: filterHandle(res.data.data.jobs, {
+            location: location,
+            description: description,
+            general: generalsearch,
+          }),
+        });
+      })
+      .catch((e) => console.log(e));
     e.preventDefault();
+  };
+
+  const filterHandle = (state, filter) => {
+    return state.filter((job) => {
+      if (job.locationNames === filter.location || filter.location === "") {
+        if (
+          job.description.includes(filter.description) ||
+          filter.description === ""
+        ) {
+          if (
+            job.title.includes(filter.general) ||
+            job.description.includes(filter.general) ||
+            filter.general === ""
+          ) {
+            return job;
+          }
+        }
+      }
+    });
   };
 
   return (

@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from "react";
 import Card from "./Card";
 import { Pagination } from "@mui/material";
-import { useSelector } from "react-redux";
+import { useSelector, createStore } from "react-redux";
 
-const Table = () => {
-  const state = useSelector((state) => {
-    return state.joblist.filter((job) => {
+const filterHandle = (state, filter) => {
+  return state.filter((job) => {
+    if (job.locationNames === filter.location || filter.location === "") {
       if (
-        job.location === state.filter.location ||
-        state.filter.location === ""
+        job.description.includes(filter.description) ||
+        filter.description === ""
       ) {
-        return job;
+        if (
+          job.title.includes(filter.general) ||
+          job.description.includes(filter.general) ||
+          filter.general === ""
+        ) {
+          return job;
+        }
       }
-    });
+    }
   });
+};
+
+const Table = (props) => {
+  const state = useSelector((state) => state.joblist);
 
   const [pages, setPages] = useState(0);
   const [offsetstartpage, setOffsetstartpage] = useState(0);

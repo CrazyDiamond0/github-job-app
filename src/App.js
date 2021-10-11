@@ -9,49 +9,54 @@ import { Container } from "@mui/material";
 import AppBar from "./AppBar";
 const axios = require("axios");
 const store = createStore(
-  combineReducers({ joblist: reducer, filter: filterReducer }),
+  combineReducers({ joblist: reducer }),
   window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
+const url = "https://api.graphql.jobs/";
+
+const query = {
+  query: `query {
+  jobs{
+    title,
+    description,
+    company{
+      name,
+      websiteUrl,
+      logoUrl,
+    },
+    postedAt,
+    applyUrl,
+    locationNames
+  },
+}`,
+};
+
+const header = {
+  headers: {
+    "Content-Type": "application/json",
+  },
+};
+
+const fetchjobs = (callback) => {
+  return axios
+    .post(url, query, header)
+    .then((res) => {
+      store.dispatch({ type: "ADD_ALL", value: res.data.data.jobs });
+    })
+    .catch((e) => console.log(e));
+};
 
 function App() {
   useEffect(() => {
-    axios
-      .post(
-        "https://api.graphql.jobs/",
-        {
-          query: `query {
-            jobs{
-              title,
-              description,
-              company{
-                name,
-                websiteUrl,
-                logoUrl,
-              },
-              postedAt,
-              applyUrl,
-              locationNames
-            },
-          }`,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      .then((res) => {
-        console.log(res.data.data.jobs);
-        store.dispatch({ type: "ADD_ALL", value: res.data.data.jobs });
-      });
+    fetchjobs();
   }, []);
 
   return (
     <Provider store={store}>
-      <AppBar />
+      <AppBar header={header} query={query} url={url} axios={axios} />
       <Container style={{ display: "flex", justifyContent: "center" }}>
         <div>
-          <Table></Table>
+          <Table store={store}></Table>
         </div>
       </Container>
     </Provider>
